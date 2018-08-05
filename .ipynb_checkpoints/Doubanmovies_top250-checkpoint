@@ -1,0 +1,204 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jul 31 12:46:06 2018
+
+@author: xcs
+"""
+
+
+import requests
+from bs4 import BeautifulSoup
+import os,socket
+import re
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+
+#创建爬虫
+class Spider:
+    def __init__(self,url='https://movie.douban.com/top250',):   #实例化
+        self.url = url
+        self.header={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"}
+        
+    #创建爬虫文件夹
+    def mkdir(self,path):
+        path = path.strip()
+        #识别文件路径是否存在
+        isExists = os.path.exists(os.path.join(r"C:\Users\51429\Desktop\传胜学习资料", path))
+        if not isExists:
+            os.makedirs(os.path.join(r"C:\Users\51429\Desktop\传胜学习资料", path))#根据文件路径创建文件夹
+            os.chdir(os.path.join(r"C:\Users\51429\Desktop\传胜学习资料", path))#改变当前工作目录到此文件夹
+        else:
+            os.chdir(os.path.join(r"C:\Users\51429\Desktop\传胜学习资料", path))
+        return os.path.abspath('.')  #返回绝对路径
+    #获取Beautifulsoup
+    def get_soup(self,link):
+        html = requests.get(link, headers=self.header)
+        html.encoding = html.apparent_encoding
+        soup = BeautifulSoup(html.text,'lxml')
+        return soup
+ 
+if __name__ == '__main__':
+    socket.setdefaulttimeout(20)  #设置超时时间为30s
+    spider = Spider()
+    path = spider.mkdir('top250')  #创建top250文件夹路径
+    print('starting get data from douban...')
+    
+    def autolabel(rects, ax, xpos='center'): #设置显示每一个条形图的值
+        xpos = xpos.lower()  # 规范参数大小写
+        ha = {'center': 'center', 'right': 'left', 'left': 'right'}
+        offset = {'center': 0.5, 'right': 0.57, 'left': 0.43}  
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() * offset[xpos], 1.01 * height,
+                    '{}'.format(height), ha=ha[xpos], va='bottom', size=6.8)
+
+
+
+    
+    #绘制x轴为年份，Y轴为电影数量柱状图
+    def drawyearplot(num_list,name_list):
+        ind = np.arange(len(name_list))
+        fig,ax = plt.subplots()   #画板分割
+        ax.set_xlabel('year')  #设置横坐标标签
+        ax.set_ylabel('numbers')   #设置纵坐标标签
+        ax.set_title('Douban top 250 movie numbers by year')  #设置柱形图标题
+        
+        rext = ax.bar(ind,num_list,color='b',tick_label=name_list)
+        autolabel(rext,ax)
+        plt.xticks(np.arange(len(name_list)),rotation=-90,size=7.2) #设置x轴坐标属性
+        
+        fig = plt.gcf()
+        fig.set_size_inches(15.5,10.5) #设置图标大小
+        plt.savefig(r"C:\Users\51429\Desktop\传胜学习资料\top250\douban_year.png",dip=200)#保存图片到本地
+        plt.show()
+        plt.close()
+        
+    def drawcountryplot(cry_list): #绘制x轴为国家，y轴为电影数量的柱状图
+        sta={}
+        for i in cry_list:
+            if not sta.__contains__(i):
+                sta[i]=1
+            else:
+                sta[i]+=1
+        num_l =[]  #数量
+        country_list=[] #国家地区
+        for key,values in sta.items():
+            country_list.append(key)
+            num_l.append(values)
+        
+        ind = np.arange(len(country_list))
+        fig,ax = plt.subplots()
+        ax.set_xlabel('country')
+        ax.set_ylabel('movie_numbers')
+        ax.set_title('Douban top 250 movie numbers by country')
+        
+        rext = ax.bar(ind,num_l,color='b',tick_label=country_list)
+        autolabel(rext,ax)
+        plt.xticks(np.arange(len(country_list)),size=7.2) #设置x轴坐标属性
+        
+        fig = plt.gcf()
+        fig.set_size_inches(15.5,10.5) #设置图标大小
+        plt.savefig(r"C:\Users\51429\Desktop\传胜学习资料\top250\douban_country.png",dip=200)#保存图片到本地
+        plt.show()
+        plt.close()
+        
+    def drawtypeplot(typ_list):     #绘制X轴为电影的标签，Y轴为数量的柱状图
+        sta = {}
+        for i in typ_list:  #统计各个国家的电影数量
+            if not sta.__contains__(i):
+                sta[i] = 1
+            else:
+                sta[i] += 1
+        num_l = []  #数量
+        tp_list = [] #电影类型
+        for key, values in sta.items():
+            tp_list.append(key)
+            num_l.append(values)       
+        ind = np.arange(len(tp_list))
+        fig,ax = plt.subplots()
+        ax.set_xlabel('type')
+        ax.set_ylabel('movie_numbers')
+        ax.set_title('Douban top 250 movie numbers by type')
+        
+        rext = ax.bar(ind,num_l,color='b',tick_label=tp_list)
+        autolabel(rext,ax)
+        plt.xticks(np.arange(len(tp_list)),size=7.2) #设置x轴坐标属性
+        
+        fig = plt.gcf()
+        fig.set_size_inches(15.5,10.5) #设置图标大小
+        plt.savefig(r"C:\Users\51429\Desktop\传胜学习资料\top250\douban_type.png",dip=200)#保存图片到本地
+        plt.show()
+        plt.close()
+       
+    # 解析豆瓣top250数据
+    year_save=[] #存储年份
+    country_save=[]  #存储国家
+    type_save=[]   #存储电影类别
+    #解决matplotlib 显示中文乱码
+    mpl.rcParams['font.sans-serif'] = ['SimHei']  # 指定默认字体 SimHei为黑体
+    mpl.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
+    # 豆瓣电影翻页
+    x = 1
+    for i in range(1,11):
+        if i == 1:
+            url ='https://movie.douban.com/top250'
+        else:
+            url = 'https://movie.douban.com/top250'+"?start="+str(25*(i-1))+'&filter='
+        main_soup = spider.get_soup(url)
+        ol_grid = main_soup.find('ol',class_='grid_view')
+        li = ol_grid.find_all('li')
+        
+        for l in li:
+            em_rank=l.find('em').get_text()
+            div_hd = l.find('div',class_='hd')
+            a = div_hd.find('a')
+            title = a.find('span',class_='title').get_text()
+            #电影信息简介获取
+            p_info = l.find('p',class_='').get_text()
+            s_c = p_info.split('/')[-2].strip()
+            country = s_c.split()[0]
+            country_save.append(country)
+            
+            #获取电影类型数组
+            l_typ = p_info.split('/')[-1].strip().split()
+            for typ in l_typ:
+                type_save.append(typ)
+            
+            s1 = ''.join(p_info.split()) #去掉字符串中的\xa0
+            l_s = s1.split('/')
+            if x==78:            #大闹天宫多次上映 取最早上映时间
+                year = '1961'
+            else:
+                year = l_s[-3][-4:]  #电影上映年份
+            x+=1
+            year_save.append(year)
+            #获取电影简评
+            div_bd = l.find('div', class_='bd')
+            q = div_bd.find('span', class_='inq')
+            if q != None:
+                quote = q.get_text()
+            else:
+                quote = '无'
+                
+                
+    name_list = []
+    sta = {}
+    for i in range(1931,2018):  #柱形图x轴坐标
+        name_list.append(i)
+        sta[str(i)]=0
+    for x in year_save:#统计从1931到2017每年在榜单中的电影数量
+        sta[x] += 1
+        
+    num_list = []
+    name_list1 = []
+    for key, value in sta.items():
+        if value > 0:       #只显示电影数量大于0的
+            name_list1.append(str(key))
+            num_list.append(value)
+
+    drawyearplot(num_list, name_list1)
+    drawcountryplot(country_save)
+    drawtypeplot(type_save)
+    
+    print('over')
