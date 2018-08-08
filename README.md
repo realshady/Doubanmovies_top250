@@ -1,2 +1,1 @@
-# Doubanmovies_top250
-By grasping the data of Top250 of douban movies, the data analysis was carried out using matplotlib
+This project shows how to crawl movie comments from Douban.com using BeautifulSoup package. After downloading those comments, the texts were segmented into Chinese words and plots of distribution were created. Then the texts were transformed into matrix and a classification model was trained to do sentiment analysis of the comments, namely to judge whether a comment is positive or negative.
